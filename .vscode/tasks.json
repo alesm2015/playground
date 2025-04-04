@@ -1,0 +1,64 @@
+{
+    "tasks": [
+        {
+            "label": "make",
+            "type": "shell",
+            "command": "make",
+            "options": {
+                "cwd": "${workspaceFolder}/build"
+            },
+            "dependsOn":["cmake"],
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            }
+        },
+        {
+            "label": "cmake",
+            "type": "shell",
+            "command": "cmake",
+            "options": {
+                "cwd": "${workspaceFolder}/build"
+            },
+            "args": [
+                "./../",
+                "-DCMAKE_BUILD_TYPE=Debug"
+            ],
+            "problemMatcher": [
+                "$gcc"
+            ],
+            "dependsOn": ["_makebuildfolder"],
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            }
+        },
+        {
+            "label": "make clean",
+            "type": "shell",
+            "command": "cmake",
+            "options": {
+                "cwd": "${workspaceFolder}/build"
+            },
+            "args": [
+                "make",
+                "clean"
+            ],
+            "problemMatcher": [
+                "$gcc"
+            ],
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            }
+        },
+        {
+            "label": "_makebuildfolder",
+            "type": "shell",
+            "command": "mkdir -p ${workspaceFolder}/build",
+            "problemMatcher": [],
+            "group": "none"
+          }
+    ],
+    "version": "2.0.0"
+}
