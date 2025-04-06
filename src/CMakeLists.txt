@@ -9,6 +9,7 @@ list (APPEND main_SOURCES
       server.cpp
       session.cpp
       booking.cpp
+      parser.cpp
     )
 
 project(main LANGUAGES C CXX)
@@ -31,6 +32,28 @@ FetchContent_Declare(
 )
 FetchContent_MakeAvailable(cli)
 
+#include(FetchContent)
+#FetchContent_Declare(
+#  telnetpp
+#  GIT_REPOSITORY https://github.com/KazDragon/telnetpp.git
+#  GIT_TAG v3.1.0
+#)
+#FetchContent_MakeAvailable(telnetpp)
+include(FetchContent)
+FetchContent_Declare(
+  libtelnet 
+  GIT_REPOSITORY https://github.com/seanmiddleditch/libtelnet.git
+  GIT_TAG 0.23
+  SOURCE_SUBDIR .
+)
+FetchContent_MakeAvailable(libtelnet)
+
+add_library(libtelnet STATIC
+    ${libtelnet_SOURCE_DIR}/libtelnet.c
+    ${libtelnet_SOURCE_DIR}/libtelnet.h
+)
+target_compile_options(libtelnet PRIVATE -Wall -Wpedantic)
+
 
 set(CMAKE_COLOR_MAKEFILE    ON)
 set(CMAKE_COLOR_DIAGNOSTICS ON)
@@ -41,6 +64,8 @@ add_library(${PROJECT_NAME} STATIC ${main_SOURCES})
 target_compile_features(${PROJECT_NAME} PUBLIC cxx_std_20)
 target_compile_options(${PROJECT_NAME} PRIVATE -Wall -Wextra -Wpedantic)
 
+#add_dependencies(${PROJECT_NAME} libtelnet)
+
 #target_link_directories(${PROJECT_NAME} PUBLIC
 #                        ${LOCAL_3RDPTY_LIBRARY_DIRS})
 
@@ -50,11 +75,15 @@ target_include_directories(${PROJECT_NAME} PUBLIC
     ${CMAKE_CURRENT_BINARY_DIR}
     ${Boost_INCLUDE_DIRS}
     ${CMAKE_SOURCE_DIR}
+    ${libtelnet_SOURCE_DIR}
 )
 
 target_link_libraries(${PROJECT_NAME}
+    PUBLIC
     ${Boost_LIBRARIES}
+    #KazDragon::telnetpp
     cli::cli
+    libtelnet
 )
 
 

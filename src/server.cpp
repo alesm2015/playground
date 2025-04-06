@@ -2,6 +2,11 @@
 #include "server.h"
 
 
+
+
+
+
+
 CServer::CServer(CBooking &booking) :\
     m_booking(booking)
 {
@@ -26,7 +31,6 @@ int32_t CServer::add_listener(boost::asio::io_context &io_context, boost::asio::
     new_ctx_ptr->acceptor_.set_option(boost::asio::ip::tcp::tcp::acceptor::reuse_address(true));
     boost::asio::co_spawn(io_context,
         [this, new_ctx_ptr]() mutable -> boost::asio::awaitable<void> {
-            co_await new_ctx_ptr->acceptor_.async_accept(boost::asio::use_awaitable);
             co_await listener(new_ctx_ptr);
         }, boost::asio::detached);
 
