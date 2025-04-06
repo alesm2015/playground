@@ -23,7 +23,7 @@ public:
     CSession(boost::asio::ip::tcp::socket socket, CBooking &booking);
     ~CSession();
 
-    void start(void);
+    void start(boost::asio::ip::tcp::tcp::tcp::acceptor::endpoint_type &peer_endpoint);
     void on_close(void);
 
 public:
@@ -58,6 +58,7 @@ private:
 
     boost::asio::ip::tcp::socket m_socket;
     boost::asio::steady_timer m_timer;
+    boost::asio::ip::tcp::tcp::tcp::acceptor::endpoint_type m_peer_endpoint;
     std::deque<std::vector<uint8_t>> m_send_msgs_deque;
 
     CBooking &m_booking;

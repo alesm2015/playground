@@ -14,6 +14,8 @@ CBooking::CBooking()
 
 int32_t CBooking::join_booker(CBooker::booker_ptr booker)
 {
+    uint32_t connections_ctx;
+
     if (booker == nullptr)
         return -EINVAL;
 
@@ -21,7 +23,8 @@ int32_t CBooking::join_booker(CBooker::booker_ptr booker)
     if (it.second != true)
         return -EEXIST;
 
-    return m_active_bookers_set.size();
+    connections_ctx = m_connections_ctx++;
+    return static_cast<int32_t>(connections_ctx);
 }
 
 int32_t CBooking::leave_booker(CBooker::booker_ptr booker)
@@ -110,7 +113,7 @@ int32_t CBooking::book_seats
     CBooker::booker_ptr booker, 
     const std::string &movie,
     const std::string &theatre,
-    std::vector<uint32_t> &seats,
+    std::set<uint32_t> &seats,
     std::vector<uint32_t> &unavalable_seats,
     bool best_effort
 )
@@ -132,7 +135,7 @@ int32_t CBooking::book_seats
     CBooker::booker_ptr booker,
     movie *p_movie,
     const std::string &theatre,
-    std::vector<uint32_t> &seats,
+    std::set<uint32_t> &seats,
     std::vector<uint32_t> &unavalable_seats,
     bool best_effort
 )
@@ -152,7 +155,7 @@ int32_t CBooking::book_seats
 (
     CBooker::booker_ptr booker, 
     theatre_reservation &reservation,
-    std::vector<uint32_t> &seats,
+    std::set<uint32_t> &seats,
     std::vector<uint32_t> &unavalable_seats,
     bool best_effort
 )
@@ -195,7 +198,7 @@ int32_t CBooking::book_seats
 (
     std::set<uint32_t> &free_reservations_set,
     std::set<uint32_t> &custom_reserved_set,
-    std::vector<uint32_t> &seats,
+    std::set<uint32_t> &seats,
     std::vector<uint32_t> &unavalable_seats,
     bool best_effort
 )
@@ -241,7 +244,7 @@ int32_t CBooking::unbook_seats
     CBooker::booker_ptr booker, 
     const std::string &movie,
     const std::string &theatre,
-    std::vector<uint32_t> &seats,
+    std::set<uint32_t> &seats,
     std::vector<uint32_t> &invalid_seats
 )
 {
@@ -262,7 +265,7 @@ int32_t CBooking::unbook_seats
     CBooker::booker_ptr booker, 
     movie *p_movie,
     const std::string &theatre,
-    std::vector<uint32_t> &seats,
+    std::set<uint32_t> &seats,
     std::vector<uint32_t> &invalid_seats
 )
 {
@@ -281,7 +284,7 @@ int32_t CBooking::unbook_seats
 (
     CBooker::booker_ptr booker, 
     theatre_reservation &reservation,
-    std::vector<uint32_t> &seats,
+    std::set<uint32_t> &seats,
     std::vector<uint32_t> &invalid_seats
 )
 {
@@ -289,7 +292,9 @@ int32_t CBooking::unbook_seats
 
     auto booker_it = reservation.reserved_map_.find(booker->get_booker_uid());
     if (booker_it == reservation.reserved_map_.end()) {
-        invalid_seats = seats;
+        for (uint32_t seat : seats) {
+            invalid_seats.push_back(seat);
+        }
         return static_cast<int32_t>(invalid_seats.size());
     }
 

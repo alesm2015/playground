@@ -4,6 +4,7 @@
 #include <map>
 #include <string>
 #include <mutex>
+#include <atomic>
 
 #include <boost/property_tree/json_parser.hpp>
 #include <boost/property_tree/ptree.hpp>
@@ -47,7 +48,7 @@ public:
         CBooker::booker_ptr booker, 
         const std::string &movie,
         const std::string &theatre,
-        std::vector<uint32_t> &seats,
+        std::set<uint32_t> &seats,
         std::vector<uint32_t> &unavalable_seats,
         bool best_effort = false);
 
@@ -55,7 +56,7 @@ public:
         CBooker::booker_ptr booker, 
         const std::string &movie,
         const std::string &theatre,
-        std::vector<uint32_t> &seats,
+        std::set<uint32_t> &seats,
         std::vector<uint32_t> &invalid_seats);
 
     int32_t get_free_seats (
@@ -73,21 +74,21 @@ private:
         CBooker::booker_ptr booker, 
         movie *p_movie,
         const std::string &theatre,
-        std::vector<uint32_t> &seats,
+        std::set<uint32_t> &seats,
         std::vector<uint32_t> &unavalable_seats,
         bool best_effort);
 
     int32_t book_seats (
         CBooker::booker_ptr booker, 
         theatre_reservation &reservation,
-        std::vector<uint32_t> &seats,
+        std::set<uint32_t> &seats,
         std::vector<uint32_t> &unavalable_seats,
         bool best_effort);
 
     int32_t book_seats (
         std::set<uint32_t> &free_reservations_set,
         std::set<uint32_t> &custom_reserved_set,
-        std::vector<uint32_t> &seats,
+        std::set<uint32_t> &seats,
         std::vector<uint32_t> &unavalable_seats,
         bool best_effort);
 
@@ -95,18 +96,19 @@ private:
         CBooker::booker_ptr booker, 
         movie *p_movie,
         const std::string &theatre,
-        std::vector<uint32_t> &seats,
+        std::set<uint32_t> &seats,
         std::vector<uint32_t> &invalid_seats);
 
     int32_t unbook_seats (
         CBooker::booker_ptr booker, 
         theatre_reservation &reservation,
-        std::vector<uint32_t> &seats,
+        std::set<uint32_t> &seats,
         std::vector<uint32_t> &invalid_seats);
 
     void dump_set (std::string buffer, const std::set<uint32_t> &set) const;
         
 private:
+    std::atomic<uint32_t> m_connections_ctx;
     std::set<CBooker::booker_ptr> m_active_bookers_set;
 
     movies_map_t m_movies_map;

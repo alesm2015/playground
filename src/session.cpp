@@ -49,9 +49,24 @@ CSession::~CSession()
     telnet_free(m_p_telnet);
 }
 
-void CSession::start(void)
+void CSession::start(boost::asio::ip::tcp::tcp::tcp::acceptor::endpoint_type &peer_endpoint)
 {
-    m_booking.join_booker(shared_from_this());
+    int32_t rc;
+    std::string pretty_peer_uid;
+
+    m_peer_endpoint = peer_endpoint;
+    pretty_peer_uid  = m_peer_endpoint.address().to_string();
+    pretty_peer_uid += ":";
+    pretty_peer_uid += std::to_string(m_peer_endpoint.port());
+
+    rc = m_booking.join_booker(shared_from_this());
+    if (rc < EXIT_SUCCESS) {
+        on_close();
+        return;
+    }
+    pretty_peer_uid += "@";
+    pretty_peer_uid += std::to_string(rc);
+    CBooker::set_uid(pretty_peer_uid);
 
     boost::asio::co_spawn(m_socket.get_executor(),\
         [self = shared_from_this()]{ return self->on_recv(); },\
@@ -192,7 +207,7 @@ void CSession::send_text_msg(const std::string &message)
 
 void CSession::cli_enter(std::ostream &out)
 {
-    out << "Hello\n";
+    out << "Hello: " + CBooker::get_booker_uid() + "\n";
 }
 void CSession::cli_exit(std::ostream &out)
 {

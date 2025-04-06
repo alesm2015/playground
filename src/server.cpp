@@ -42,11 +42,12 @@ boost::asio::awaitable<void> CServer::listener(std::shared_ptr<listener_ctx> ctx
 {
 
     do {
-        ctx_ptr->session_ = std::make_shared<CSession>(co_await ctx_ptr->acceptor_.async_accept(boost::asio::use_awaitable), m_booking);
+        boost::asio::ip::tcp::tcp::tcp::acceptor::endpoint_type peer_endpoint;
+        ctx_ptr->session_ = std::make_shared<CSession>(co_await ctx_ptr->acceptor_.async_accept(peer_endpoint, boost::asio::use_awaitable), m_booking);
         if (ctx_ptr->session_ == nullptr) {
             co_return;
         }
-        ctx_ptr->session_->start();
+        ctx_ptr->session_->start(peer_endpoint);
     } while (ctx_ptr->session_ != nullptr);
 
     //co_return;
