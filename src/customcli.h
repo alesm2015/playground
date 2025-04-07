@@ -8,12 +8,22 @@
 #include <cli/colorprofile.h>
 
 
+/*! \brief Combination of wrapper classes for CLI
+ *         Here is the list of all wrapper classes required to fit CLI library to our solution
+ *
+ *  There was no good classes in the library which much our case, so we needed to build them below
+ */
 namespace cli
 {
 
 // *******************************************************************************
+/* Here are VT100 colors*/
 enum BeforeError { beforeError };
 enum AfterError { afterError };
+enum BeforeWarn { beforeWarn };
+enum AfterWarn { afterWarn };
+enum BeforeOK { beforeOK };
+enum AfterWOK { afterOK };
 
 inline std::ostream& operator<<(std::ostream& os, BeforeError)
 {
@@ -27,7 +37,36 @@ inline std::ostream& operator<<(std::ostream& os, AfterError)
     return os;
 }
 
+inline std::ostream& operator<<(std::ostream& os, BeforeWarn)
+{
+    if ( Color() ) { os << detail::rang::control::forceColor << detail::rang::fg::yellow << detail::rang::style::bold; }
+    return os;
+}
 
+inline std::ostream& operator<<(std::ostream& os, AfterWarn)
+{
+    os << detail::rang::style::reset;
+    return os;
+}
+
+inline std::ostream& operator<<(std::ostream& os, BeforeOK)
+{
+    if ( Color() ) { os << detail::rang::control::forceColor << detail::rang::fg::green << detail::rang::style::bold; }
+    return os;
+}
+
+inline std::ostream& operator<<(std::ostream& os, AfterWOK)
+{
+    os << detail::rang::style::reset;
+    return os;
+}
+
+
+
+/*! \brief CliCustomInputDevice class.
+ *         VT100 based CLI decoder + function based to match our use case
+ *
+ */
 class CliCustomInputDevice: public detail::InputDevice
 {
 private:
@@ -123,7 +162,10 @@ private:
         Step m_step = Step::_1;
 };
 
-
+/*! \brief CliCustomSession class.
+ *         Based to our use case -> call callback function to send data to socket
+ *
+ */
 class CliCustomSession: public std::streambuf
 {
     std::ostream outStream;
@@ -168,6 +210,12 @@ private:
 
 };
 
+
+/*! \brief CliCustomLoopScheduler class.
+ *         We don't need additional task, to run CLI
+ *         It gets executed in the RX task
+ *
+ */
 class CliCustomLoopScheduler : public Scheduler
 {
 public:
@@ -187,6 +235,10 @@ public:
 };
 
 
+/*! \brief CliCustomTerminalSession class.
+ *         Primary telnet based CLI, modified to meet our needs
+ *
+ */
 class CliCustomTerminalSession : public CliCustomInputDevice, public CliCustomSession, public CliSession
 {
 public:

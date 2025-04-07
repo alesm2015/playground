@@ -2,16 +2,19 @@
 
 #include <boost/optional/optional.hpp>
 
+#include "parser.h"
 #include "booking.h"
 
 
-
+/// @brief Standard constructor
 CBooking::CBooking()
 {
 
 }
 
-
+/// @brief Join new session as booker
+/// @param booker [in] new booker
+/// @return Negative on error, >=0 on success
 int32_t CBooking::join_booker(CBooker::booker_ptr booker)
 {
     uint32_t connections_ctx;
@@ -27,6 +30,9 @@ int32_t CBooking::join_booker(CBooker::booker_ptr booker)
     return static_cast<int32_t>(connections_ctx);
 }
 
+/// @brief Leave us(booker) from booking. Session was closed
+/// @param booker [in] Removing booker
+/// @return Negative on error, >=0 on success
 int32_t CBooking::leave_booker(CBooker::booker_ptr booker)
 {
     if (booker == nullptr)
@@ -36,6 +42,9 @@ int32_t CBooking::leave_booker(CBooker::booker_ptr booker)
     return size;
 }
 
+/// @brief Create list of empty seats
+/// @param reservations [out] Location, where list needs to be stored
+/// @return Negative on error, >=0 on success
 int32_t CBooking::prepare_reservation (theatre_reservation &reservations)
 {
     for (uint32_t seat = 0; seat < m_max_seats_capacity; ++seat) {
@@ -48,16 +57,21 @@ int32_t CBooking::prepare_reservation (theatre_reservation &reservations)
     return static_cast<int32_t>(m_max_seats_capacity);
 }
 
+/// @brief Load dynamic configuration
+/// @param pt [in] configuration tree
+/// @return Negative on error, >=0 on success
 int32_t CBooking::load_data(const boost::property_tree::ptree &pt)
 {
     int32_t rc;
 
     auto movies = pt.find("movies");
     if (movies == pt.not_found()) {
+        /*no movies data exist*/
         return -EBADMSG;
     }
 
     for (auto it = movies->second.begin(); it != movies->second.end(); ++it) {
+        /*loop troug all the movies*/
         auto new_movie = std::make_unique<movie>();
         if (new_movie == nullptr) {
             return -ENOMEM;
@@ -75,6 +89,7 @@ int32_t CBooking::load_data(const boost::property_tree::ptree &pt)
 
         for (auto it2 = theatres->second.begin(); it2 != theatres->second.end(); ++it2) {
             theatre_reservation new_theatre;
+            /*loop trough all the theatres within a movie*/
 
             std::string theatre = it2->second.get_value<std::string>();
 
@@ -108,6 +123,15 @@ int32_t CBooking::load_data(const boost::property_tree::ptree &pt)
     return EXIT_SUCCESS;
 }
 
+/// @brief Book the list of seats
+/// @param booker [in] booker uid
+/// @param movie [in] movie, which gets booked
+/// @param theatre [in] theatre where movie is played
+/// @param seats [in] array of booking seats
+/// @param unavalable_seats [out] list of seats, which are already taken.
+///                     But were in our request
+/// @param best_effort [in] true, to skip already booked seats
+/// @return Negative on error, >=0 on success
 int32_t CBooking::book_seats 
 (
     CBooker::booker_ptr booker, 
@@ -130,6 +154,15 @@ int32_t CBooking::book_seats
     return book_seats(booker, it_movie->second.get(), theatre, seats, unavalable_seats, best_effort);
 }
 
+/// @brief Book the list of seats
+/// @param booker [in] booker uid
+/// @param movie [in] ptr to movie ctx
+/// @param theatre [in] theatre where movie is played
+/// @param seats [in] array of booking seats
+/// @param unavalable_seats [out] list of seats, which are already taken.
+///                     But were in our request
+/// @param best_effort [in] true, to skip already booked seats
+/// @return Negative on error, >=0 on success
 int32_t CBooking::book_seats 
 (
     CBooker::booker_ptr booker,
@@ -151,6 +184,14 @@ int32_t CBooking::book_seats
     return book_seats(booker, it_theatre->second, seats, unavalable_seats, best_effort);
 }
 
+/// @brief Book the list of seats
+/// @param booker [in] booker uid
+/// @param reservation [in] ptr to reservation ctx
+/// @param seats [in] array of booking seats
+/// @param unavalable_seats [out] list of seats, which are already taken.
+///                     But were in our request
+/// @param best_effort [in] true, to skip already booked seats
+/// @return Negative on error, >=0 on success
 int32_t CBooking::book_seats 
 (
     CBooker::booker_ptr booker, 
@@ -194,6 +235,14 @@ int32_t CBooking::book_seats
     return rc;
 }
 
+/// @brief Book the list of seats
+/// @param free_reservations_set [in] list of free seats
+/// @param custom_reserved_set [in] list of required seats to be booked
+/// @param seats [in] array of booking seats
+/// @param unavalable_seats [out] list of seats, which are already taken.
+///                     But were in our request
+/// @param best_effort [in] true, to skip already booked seats
+/// @return Negative on error, >=0 on success
 int32_t CBooking::book_seats
 (
     std::set<uint32_t> &free_reservations_set,
@@ -239,6 +288,13 @@ int32_t CBooking::book_seats
     return static_cast<int32_t>(seats.size());
 }
 
+/// @brief Release already taken seats
+/// @param booker [in] booker uid
+/// @param movie [in] movie, which gets booked
+/// @param theatre [in] theatre where movie is played
+/// @param seats [in] array of booking seats
+/// @param invalid_seats [out] list of seats, which are not tkaen taken by us
+/// @return Negative on error, >=0 on success
 int32_t CBooking::unbook_seats 
 (
     CBooker::booker_ptr booker, 
@@ -260,6 +316,13 @@ int32_t CBooking::unbook_seats
     return unbook_seats(booker, it_movie->second.get(), theatre, seats, invalid_seats);    
 }
 
+/// @brief Release already taken seats
+/// @param booker [in] booker uid
+/// @param p_movie [in] ptr to movie
+/// @param theatre [in] theatre where movie is played
+/// @param seats [in] array of booking seats
+/// @param invalid_seats [out] list of seats, which are not tkaen taken by us
+/// @return Negative on error, >=0 on success
 int32_t CBooking::unbook_seats 
 (
     CBooker::booker_ptr booker, 
@@ -280,6 +343,12 @@ int32_t CBooking::unbook_seats
     return unbook_seats(booker, it_theatre->second, seats, invalid_seats);
 }
 
+/// @brief Release already taken seats
+/// @param booker [in] booker uid
+/// @param reservation [in] ptr to reservation ctx
+/// @param seats [in] array of booking seats
+/// @param invalid_seats [out] list of seats, which are not tkaen taken by us
+/// @return Negative on error, >=0 on success
 int32_t CBooking::unbook_seats 
 (
     CBooker::booker_ptr booker, 
@@ -321,6 +390,12 @@ int32_t CBooking::unbook_seats
     return rc;
 }
 
+/// @brief Get the list of free seats
+/// @param booker [in] booker uid
+/// @param movie [in] movie
+/// @param theatre [in] theatre
+/// @param free_seats [out] list of free seats
+/// @return Negative on error, >=0 on success
 int32_t CBooking::get_free_seats (
     const std::string &movie,
     const std::string &theatre,
@@ -343,20 +418,44 @@ int32_t CBooking::get_free_seats (
     return EXIT_SUCCESS;
 }
 
-void CBooking::dump_set (std::string buffer, const std::set<uint32_t> &set) const
+/// @brief Get the list of booked seats per booker
+/// @param booker [in] booker uid
+/// @param movie [in] movie
+/// @param theatre [in] theatre where movie is played
+/// @param seats [out] array of booked seats
+/// @return Negative on error, >=0 on success
+int32_t CBooking::get_booked_seats 
+(
+    CBooker::booker_ptr booker, 
+    const std::string &movie,
+    const std::string &theatre,
+    std::set<uint32_t> &seats
+)
 {
-    bool add_comma;
-
-    add_comma = false;
-    for (uint32_t seat : set) {
-        if (add_comma)
-            buffer += ",";
-
-        buffer += std::to_string(seat);
-        add_comma = true;
+    auto it_movie = m_movies_map.find(movie);
+    if (it_movie == m_movies_map.end()) {
+        return -EEXIST;
     }
+
+    std::lock_guard<std::mutex> lck(it_movie->second->mutex_);
+
+    auto it_theatre = it_movie->second->theatre_reservations_map_.find(theatre);
+    if (it_theatre == it_movie->second->theatre_reservations_map_.end()) {
+        return -EEXIST;
+    }
+
+    auto booker_it = it_theatre->second.reserved_map_.find(booker->get_booker_uid());
+    if (booker_it == it_theatre->second.reserved_map_.end()) {
+        return -EEXIST;
+    }
+
+    seats = booker_it->second;
+    return static_cast<int32_t>(seats.size());
 }
 
+/// @brief Show current status within movies within theatres
+/// @param buffer [out] Buffer where the status is stored in
+///         human readable form
 void CBooking::dump_status (std::string &buffer) const
 {
     std::string tmp_buffer;
@@ -377,7 +476,7 @@ void CBooking::dump_status (std::string &buffer) const
             buffer += "  ";
             buffer += "Free seats: ";
             tmp_buffer.clear();
-            dump_set(tmp_buffer, it2->second.free_reservations_set_);
+            seats_to_string(tmp_buffer, it2->second.free_reservations_set_);
             buffer += std::move(tmp_buffer);
             buffer += "\n";
 
@@ -402,7 +501,7 @@ void CBooking::dump_status (std::string &buffer) const
                 }
                 buffer += ": ";
                 tmp_buffer.clear();
-                dump_set(tmp_buffer, it3->second);
+                seats_to_string(tmp_buffer, it3->second);
                 buffer += std::move(tmp_buffer);
                 buffer += "\n";
             }

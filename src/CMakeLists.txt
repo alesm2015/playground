@@ -5,6 +5,7 @@ if(POLICY CMP0167)
   cmake_policy(SET CMP0167 NEW)
 endif()
 
+# Files need to be compiled
 list (APPEND main_SOURCES
       server.cpp
       session.cpp
@@ -32,13 +33,6 @@ FetchContent_Declare(
 )
 FetchContent_MakeAvailable(cli)
 
-#include(FetchContent)
-#FetchContent_Declare(
-#  telnetpp
-#  GIT_REPOSITORY https://github.com/KazDragon/telnetpp.git
-#  GIT_TAG v3.1.0
-#)
-#FetchContent_MakeAvailable(telnetpp)
 include(FetchContent)
 FetchContent_Declare(
   libtelnet 
@@ -64,11 +58,6 @@ add_library(${PROJECT_NAME} STATIC ${main_SOURCES})
 target_compile_features(${PROJECT_NAME} PUBLIC cxx_std_20)
 target_compile_options(${PROJECT_NAME} PRIVATE -Wall -Wextra -Wpedantic)
 
-#add_dependencies(${PROJECT_NAME} libtelnet)
-
-#target_link_directories(${PROJECT_NAME} PUBLIC
-#                        ${LOCAL_3RDPTY_LIBRARY_DIRS})
-
 target_include_directories(${PROJECT_NAME} PUBLIC
     "${PROJECT_BINARY_DIR}"
     "${PROJECT_SOURCE_DIR}"
@@ -81,7 +70,6 @@ target_include_directories(${PROJECT_NAME} PUBLIC
 target_link_libraries(${PROJECT_NAME}
     PUBLIC
     ${Boost_LIBRARIES}
-    #KazDragon::telnetpp
     cli::cli
     libtelnet
 )
