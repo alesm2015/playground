@@ -36,14 +36,7 @@
         {
             "label": "make clean",
             "type": "shell",
-            "command": "cmake",
-            "options": {
-                "cwd": "${workspaceFolder}/build"
-            },
-            "args": [
-                "make",
-                "clean"
-            ],
+            "command": "rm -rf ${workspaceFolder}/build",
             "problemMatcher": [
                 "$gcc"
             ],
