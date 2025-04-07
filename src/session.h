@@ -5,6 +5,7 @@
 #include <string>
 #include <vector>
 #include <mutex>
+#include <string>
 
 #include <boost/asio.hpp>
 #include <boost/asio/ip/tcp.hpp>
@@ -19,6 +20,31 @@
 class CSession:\
     public CBooker, public std::enable_shared_from_this<CSession>
 {
+private:
+    using cli_cmd_cb_t = std::function<void(std::ostream& out, const std::string& arg, size_t movie_pos, size_t theatre_pos)>;
+
+    struct cli_cmds {
+        cli_cmd_cb_t cli_cmd_cb;
+        cli::CmdHandler cmd_handler;
+    };
+
+    struct cli_theatre_cmds {
+        std::string theatre;
+        cli::CmdHandler theatre_menu;
+
+        cli_cmds seats;
+        cli_cmds book;
+        cli_cmds try_book;
+        cli_cmds un_book;
+        cli_cmds status;
+    };
+
+    struct cli_movie_cmds {
+        std::string movie;
+        cli::CmdHandler movie_menu;
+        std::vector<cli_theatre_cmds> theatre_cmd_vector;
+    };
+
 public:
     CSession(boost::asio::ip::tcp::socket socket, CBooking &booking);
     ~CSession();
@@ -41,9 +67,16 @@ private:
 
     void cli_enter(std::ostream &out);
     void cli_exit(std::ostream &out);
+    void set_uid(const std::string &new_uid);
 
     boost::asio::awaitable<void> on_recv(void);
     boost::asio::awaitable<void> on_send(void);
+
+    void test1 (std::ostream& out, const std::string& arg) {};
+    void test2 (std::ostream& out, const std::string& arg, int x1, int x2) {};
+
+    std::function<void(std::ostream& out, const std::string& arg)> m_test1;
+    std::function<void(std::ostream& out, const std::string& arg, int x1, int x2)> m_test2;
 
 private:
     bool m_b_exit_ready;
@@ -62,6 +95,7 @@ private:
     std::deque<std::vector<uint8_t>> m_send_msgs_deque;
 
     CBooking &m_booking;
+    std::vector<cli_movie_cmds> m_movie_cmd_vector;
 
 private:
     static constexpr telnet_telopt_t m_my_telopts[] = {

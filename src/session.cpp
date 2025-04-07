@@ -66,7 +66,7 @@ void CSession::start(boost::asio::ip::tcp::tcp::tcp::acceptor::endpoint_type &pe
     }
     pretty_peer_uid += "@";
     pretty_peer_uid += std::to_string(rc);
-    CBooker::set_uid(pretty_peer_uid);
+    set_uid(pretty_peer_uid);
 
     boost::asio::co_spawn(m_socket.get_executor(),\
         [self = shared_from_this()]{ return self->on_recv(); },\
@@ -80,6 +80,11 @@ void CSession::start(boost::asio::ip::tcp::tcp::tcp::acceptor::endpoint_type &pe
     telnet_negotiate(m_p_telnet, TELNET_WILL, TELNET_TELOPT_ECHO);
     telnet_negotiate(m_p_telnet, TELNET_WILL, TELNET_TELOPT_SGA);
     m_cli_session_ptr->OnConnect();
+}
+
+void CSession::set_uid(const std::string &new_uid)
+{
+    CBooker::set_uid(new_uid);
 }
 
 void CSession::on_close(void)
@@ -250,12 +255,26 @@ void CSession::telnet_event_handler_cb (telnet_t *telnet, telnet_event_t *event)
 
 void CSession::init_cli(void)
 {
+    std::size_t pos;
+    const CBooking::movies_map_t &movies_map = m_booking.get_configuration();
+
     auto rootMenu = std::make_unique<cli::Menu>("cli");
 
+#if 1   
+    int a1 = 1;
+    int a2 = 2;
+
+    //auto f1 = std::bind(&CSession::test1, this, std::placeholders::_1, std::placeholders::_2);
+    m_test2 = std::bind(&CSession::test2, this, std::placeholders::_1, std::placeholders::_2, a1, a2);
+
     rootMenu->Insert(
-        "hello",
+        "status",
         [](std::ostream& out){ out << "Hello, world\n"; },
-        "Print hello world" );
+        "Show current booking status" );
+    rootMenu->Insert("test1", m_test1, "test1");
+    rootMenu->Insert("test2", m_test2, "test2");
+#endif
+
     m_colorCmd = rootMenu->Insert(
         "color",
         [&](std::ostream& out)
@@ -276,6 +295,76 @@ void CSession::init_cli(void)
             m_nocolorCmd.Disable();
         },
         "Disable colors in the cli" );
+
+    /**/
+    for (auto& movie : movies_map) {
+        std::string help = "Movie: " + movie.first;
+        auto new_menu_movie = std::make_unique<cli::Menu>(movie.first, help, movie.first);
+        if (new_menu_movie == nullptr) {
+            return;
+        }
+
+        pos = 0;
+        for (auto& theatre : movie.second->theatre_reservations_map_) {
+            cli_theatre_cmds new_cli_theatre_cmd;
+            std::string help2 = "Theatre: " + theatre.first;
+
+            auto new_menu_theatre = std::make_unique<cli::Menu>(theatre.first, help2, theatre.first);
+            if (new_menu_theatre == nullptr) {
+                return;
+            }
+            new_cli_theatre_cmd.theatre = theatre.first;
+
+            new_cli_theatre_cmd.seats.cli_cmd_cb = std::bind(
+                &CSession::test2,
+                this,
+                std::placeholders::_1,
+                std::placeholders::_2,
+                m_movie_cmd_vector.size(),
+                pos);
+            new_cli_theatre_cmd.seats.cmd_handler = new_menu_theatre->Insert(
+                "seats",
+                new_cli_theatre_cmd.seats.cli_cmd_cb,
+                "Show free seats");
+
+            new_cli_theatre_cmd.book.cmd_handler = new_menu_theatre->Insert(
+            "book",
+            [&](std::ostream& out)
+            {
+
+            },
+            "Book selected seats");
+
+
+            new_cli_theatre_cmd.try_book.cmd_handler = new_menu_theatre->Insert(
+            "trybook",
+            [&](std::ostream& out)
+            {
+
+            },
+            "Try to book selected seats");
+
+            new_cli_theatre_cmd.un_book.cmd_handler = new_menu_theatre->Insert(
+            "unbook",
+            [&](std::ostream& out)
+            {
+
+            },
+            "Release selected seats");
+
+            new_cli_theatre_cmd.status.cmd_handler = new_menu_theatre->Insert(
+                "status",
+                [&](std::ostream& out)
+                {
+
+                },
+                "Show our booking status"); 
+
+                new_cli_theatre_cmd.theatre_menu =\
+                    new_menu_movie->Insert(std::move(new_menu_theatre));
+        }
+
+    }
 
     m_cli_ptr = std::make_unique<cli::Cli>(std::move(rootMenu));
     m_cli_ptr->StdExceptionHandler(

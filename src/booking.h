@@ -44,6 +44,8 @@ public:
     int32_t join_booker(CBooker::booker_ptr booker);
     int32_t leave_booker(CBooker::booker_ptr booker);
 
+    const movies_map_t &get_configuration(void) const {return m_movies_map;};
+
     int32_t book_seats (
         CBooker::booker_ptr booker, 
         const std::string &movie,
