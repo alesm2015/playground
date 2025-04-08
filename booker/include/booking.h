@@ -59,8 +59,7 @@ public:
 
     /// @brief Leave us(booker) from booking. Session was closed
     /// @param booker [in] Removing booker
-    /// @return Negative on error, >=0 on success
-    int32_t leave_booker(CBooker::booker_ptr booker);
+    void leave_booker(CBooker::booker_ptr booker);
 
     /// @brief get current cinema configuration
     /// @return configuration itself
@@ -79,7 +78,7 @@ public:
         CBooker::booker_ptr booker, 
         const std::string &movie,
         const std::string &theatre,
-        std::set<uint32_t> &seats,
+        const std::set<uint32_t> &seats,
         std::vector<uint32_t> &unavalable_seats,
         bool best_effort = false);
 
@@ -94,7 +93,7 @@ public:
         CBooker::booker_ptr booker, 
         const std::string &movie,
         const std::string &theatre,
-        std::set<uint32_t> &seats,
+        const std::set<uint32_t> &seats,
         std::vector<uint32_t> &invalid_seats);
 
     /// @brief Get the list of booked seats per booker
@@ -148,7 +147,7 @@ private:
         CBooker::booker_ptr booker, 
         movie *p_movie,
         const std::string &theatre,
-        std::set<uint32_t> &seats,
+        const std::set<uint32_t> &seats,
         std::vector<uint32_t> &unavalable_seats,
         bool best_effort);
 
@@ -163,7 +162,7 @@ private:
     int32_t book_seats (
         CBooker::booker_ptr booker, 
         theatre_reservation &reservation,
-        std::set<uint32_t> &seats,
+        const std::set<uint32_t> &seats,
         std::vector<uint32_t> &unavalable_seats,
         bool best_effort);
 
@@ -178,7 +177,7 @@ private:
     int32_t book_seats (
         std::set<uint32_t> &free_reservations_set,
         std::set<uint32_t> &custom_reserved_set,
-        std::set<uint32_t> &seats,
+        const std::set<uint32_t> &seats,
         std::vector<uint32_t> &unavalable_seats,
         bool best_effort);
 
@@ -193,7 +192,7 @@ private:
         CBooker::booker_ptr booker, 
         movie *p_movie,
         const std::string &theatre,
-        std::set<uint32_t> &seats,
+        const std::set<uint32_t> &seats,
         std::vector<uint32_t> &invalid_seats);
 
     /// @brief Release already taken seats
@@ -205,7 +204,7 @@ private:
     int32_t unbook_seats (
         CBooker::booker_ptr booker, 
         theatre_reservation &reservation,
-        std::set<uint32_t> &seats,
+        const std::set<uint32_t> &seats,
         std::vector<uint32_t> &invalid_seats);
         
 private:

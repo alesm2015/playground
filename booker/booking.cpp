@@ -27,19 +27,17 @@ int32_t CBooking::join_booker(CBooker::booker_ptr booker)
         return -EEXIST;
 
     connections_ctx = m_connections_ctx++;
-    return static_cast<int32_t>(connections_ctx);
+    return static_cast<int32_t>(connections_ctx + 1);
 }
 
 /// @brief Leave us(booker) from booking. Session was closed
 /// @param booker [in] Removing booker
-/// @return Negative on error, >=0 on success
-int32_t CBooking::leave_booker(CBooker::booker_ptr booker)
+void CBooking::leave_booker(CBooker::booker_ptr booker)
 {
     if (booker == nullptr)
-        return -EINVAL;
+        return;
 
-    std::size_t size = m_active_bookers_set.erase(booker);
-    return size;
+    m_active_bookers_set.erase(booker);
 }
 
 /// @brief Create list of empty seats
@@ -137,7 +135,7 @@ int32_t CBooking::book_seats
     CBooker::booker_ptr booker, 
     const std::string &movie,
     const std::string &theatre,
-    std::set<uint32_t> &seats,
+    const std::set<uint32_t> &seats,
     std::vector<uint32_t> &unavalable_seats,
     bool best_effort
 )
@@ -168,7 +166,7 @@ int32_t CBooking::book_seats
     CBooker::booker_ptr booker,
     movie *p_movie,
     const std::string &theatre,
-    std::set<uint32_t> &seats,
+    const std::set<uint32_t> &seats,
     std::vector<uint32_t> &unavalable_seats,
     bool best_effort
 )
@@ -196,7 +194,7 @@ int32_t CBooking::book_seats
 (
     CBooker::booker_ptr booker, 
     theatre_reservation &reservation,
-    std::set<uint32_t> &seats,
+    const std::set<uint32_t> &seats,
     std::vector<uint32_t> &unavalable_seats,
     bool best_effort
 )
@@ -247,14 +245,26 @@ int32_t CBooking::book_seats
 (
     std::set<uint32_t> &free_reservations_set,
     std::set<uint32_t> &custom_reserved_set,
-    std::set<uint32_t> &seats,
+    const std::set<uint32_t> &seats,
     std::vector<uint32_t> &unavalable_seats,
     bool best_effort
 )
 {
+    int32_t rc;
+    bool overrange;
     std::set<uint32_t> new_reserved_seats;
 
+    unavalable_seats.clear();
+
+    rc = EXIT_SUCCESS;
+    overrange = false;
     for (uint32_t seat : seats) {
+        if (seat >= m_max_seats_capacity) {
+            overrange = true;
+            rc = -ERANGE;
+            break;
+        }
+
         auto free_seat_it = free_reservations_set.find(seat);
         if (free_seat_it == free_reservations_set.end()) {
             /*OK, seat is already book, is ours?*/
@@ -273,7 +283,7 @@ int32_t CBooking::book_seats
         }
     }
 
-    if ((unavalable_seats.empty() != true)&&(best_effort == false)) {
+    if (((unavalable_seats.empty() != true)&&(best_effort == false))||(overrange)) {
         /*we failed to book all the required seats*/
         for (uint32_t seat : new_reserved_seats) {
             auto it = free_reservations_set.insert(seat);
@@ -281,11 +291,11 @@ int32_t CBooking::book_seats
                 return -ENOMEM;
             }
         }
-        return EXIT_SUCCESS;
+        return rc;
     }
 
     custom_reserved_set.insert(new_reserved_seats.begin(), new_reserved_seats.end());
-    return static_cast<int32_t>(seats.size());
+    return static_cast<int32_t>(custom_reserved_set.size());
 }
 
 /// @brief Release already taken seats
@@ -300,7 +310,7 @@ int32_t CBooking::unbook_seats
     CBooker::booker_ptr booker, 
     const std::string &movie,
     const std::string &theatre,
-    std::set<uint32_t> &seats,
+    const std::set<uint32_t> &seats,
     std::vector<uint32_t> &invalid_seats
 )
 {
@@ -328,7 +338,7 @@ int32_t CBooking::unbook_seats
     CBooker::booker_ptr booker, 
     movie *p_movie,
     const std::string &theatre,
-    std::set<uint32_t> &seats,
+    const std::set<uint32_t> &seats,
     std::vector<uint32_t> &invalid_seats
 )
 {
@@ -353,18 +363,24 @@ int32_t CBooking::unbook_seats
 (
     CBooker::booker_ptr booker, 
     theatre_reservation &reservation,
-    std::set<uint32_t> &seats,
+    const std::set<uint32_t> &seats,
     std::vector<uint32_t> &invalid_seats
 )
 {
     int32_t rc;
 
+    invalid_seats.clear();
     auto booker_it = reservation.reserved_map_.find(booker->get_booker_uid());
     if (booker_it == reservation.reserved_map_.end()) {
         for (uint32_t seat : seats) {
             invalid_seats.push_back(seat);
         }
         return static_cast<int32_t>(invalid_seats.size());
+    }
+
+    for (uint32_t seat : seats) {
+        if (seat >= m_max_seats_capacity)
+            return -ERANGE;
     }
 
     rc = 0;
@@ -432,6 +448,8 @@ int32_t CBooking::get_booked_seats
     std::set<uint32_t> &seats
 )
 {
+    seats.clear();
+
     auto it_movie = m_movies_map.find(movie);
     if (it_movie == m_movies_map.end()) {
         return -EEXIST;
@@ -446,7 +464,7 @@ int32_t CBooking::get_booked_seats
 
     auto booker_it = it_theatre->second.reserved_map_.find(booker->get_booker_uid());
     if (booker_it == it_theatre->second.reserved_map_.end()) {
-        return -EEXIST;
+        return EXIT_SUCCESS;
     }
 
     seats = booker_it->second;

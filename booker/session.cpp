@@ -43,6 +43,7 @@ CSession::CSession(boost::asio::ip::tcp::socket socket, CBooking &booking) :\
     m_socket(std::move(socket)), m_timer(m_socket.get_executor()), m_booking(booking)
 {
     m_b_exit_ready = false;
+    m_b_exit_done = false;
     m_timer.expires_at(std::chrono::steady_clock::time_point::max());
 
     m_p_telnet = telnet_init(m_my_telopts, ::telnet_event_handler_cb, 0, this);
@@ -54,7 +55,7 @@ CSession::CSession(boost::asio::ip::tcp::socket socket, CBooking &booking) :\
 /// @brief Standard destructor
 CSession::~CSession()
 {
-    on_close();
+    assert(m_b_exit_done == true);
 
     telnet_free(m_p_telnet);
 }
@@ -65,6 +66,8 @@ void CSession::start(boost::asio::ip::tcp::tcp::tcp::acceptor::endpoint_type &pe
 {
     int32_t rc;
     std::string pretty_peer_uid;
+
+    assert(m_on_close_cb != nullptr);
 
     /*create session pretty name, for booking identificator*/
     m_peer_endpoint = peer_endpoint;
@@ -107,17 +110,18 @@ void CSession::set_uid(const std::string &new_uid)
 /// @brief Close TCP connection
 void CSession::on_close(void)
 {
-    int32_t rc;
-
     /*Unregister us from booker*/
-    rc = m_booking.leave_booker(shared_from_this());
-    assert(rc >= 0);
+    m_booking.leave_booker(shared_from_this());
+
+    if (m_on_close_cb)
+        (m_on_close_cb)(shared_from_this());
 
     /*Close socket*/
     if (m_socket.is_open())
         m_socket.close();
     
     m_timer.cancel(); 
+    m_b_exit_done = true;
 }
 
 /// @brief RX coroutine

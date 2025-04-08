@@ -1,4 +1,4 @@
 // the configured options and settings for trader daemon
-#define traderd_VERSION_MAJOR ${VERSION_MAJOR}
-#define traderd_VERSION_MINOR ${VERSION_MINOR}
-#define traderd_VERSION_PATCH ${VERSION_PATCH}
+#define playd_VERSION_MAJOR ${VERSION_MAJOR}
+#define playd_VERSION_MINOR ${VERSION_MINOR}
+#define playd_VERSION_PATCH ${VERSION_PATCH}

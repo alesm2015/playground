@@ -17,8 +17,10 @@
 
 
 #include "server.h"
+#include "version.h"
 
-/*some defines*/
+
+/*Settings for daemon*/
 #define BD_NO_CHDIR           0x01 /* Don't chdir ("/") */
 #define BD_NO_CLOSE_FILES     0x02 /* Don't close all open files */
 #define BD_NO_REOPEN_STD_FDS  0x04 /* Don't reopen stdin, stdout, and stderr to /dev/null */
@@ -26,11 +28,13 @@
 #define BD_NO_UMASK0          0x10 /* Don't do a umask(0) */
 #define BD_MAX_CLOSE          8192 /* Max file descriptors to close if sysconf(_SC_OPEN_MAX) is indeterminate */
 
+/*Global variables*/
+std::string pid_file_path;  /*!< Filepath to pid file */
+std::string app_name;  /*!< Our name */
+int lpf;  /*!< File descriptor of pid file */
 
-std::string pid_file_path;
-std::string app_name;
-int lpf;
-
+/// @brief Get our process uid
+/// @return pid
 static uint32_t get_pid(void)
 {
 #if defined(_WIN32)
@@ -41,6 +45,8 @@ static uint32_t get_pid(void)
 }
 
 #ifndef _WIN32
+/// @brief Signal callback handler
+/// @param [in] sig signal UID
 static void signal_handler(int sig)
 {
     switch (sig)
@@ -59,6 +65,7 @@ static void signal_handler(int sig)
     } 
 }
 
+/// @brief Register signals
 static void register_signals(void)
 {
     struct sigaction new_action, old_action;
@@ -84,6 +91,8 @@ static void register_signals(void)
     }  
 }    
 
+/// @brief Start us as daemon
+/// @param flags [in] Configuration
 static void daemonize(uint32_t flags)
 {
     pid_t pid;
@@ -162,7 +171,7 @@ static void daemonize(uint32_t flags)
     }
 
     if(!(flags & BD_NO_REOPEN_STD_FDS))
-    {
+    { //set stnadard io to /dev/null
         close(STDIN_FILENO);
 
         fd = open("/dev/null", O_RDWR);
@@ -206,6 +215,10 @@ static void daemonize(uint32_t flags)
 #endif /*_WIN32*/
 
 
+/// @brief Main entry
+/// @param argc [in] number of parameters
+/// @param argv [in] parameter value
+/// @return Program compltition
 int main(int argc, char* argv[])
 {
     int threads;
@@ -213,12 +226,18 @@ int main(int argc, char* argv[])
     CServer server(booking);
     boost::property_tree::ptree pt;
 
-    app_name = *argv[0];
+    (void)(argc);
+    (void)(argv);
+
+    lpf = -1;
+    app_name = "playd";
+
+    std::cout << app_name << " version " << playd_VERSION_MAJOR << "." << playd_VERSION_MINOR << "." << playd_VERSION_PATCH << "\n";
 
     if (0)
         daemonize(0x00);
 
-    threads = 1;
+    threads = 2;
     std::string data =\
         "{"\
         "\"movies\": ["\
@@ -248,19 +267,20 @@ int main(int argc, char* argv[])
         "                               ]"\
         "               }"\
         "            ]"\
-        "}";
+        "}"; /*!< Dummy configuration data */
 
     std::stringstream ss;
     ss << data;
     boost::property_tree::read_json(ss, pt);
 
+#if 0
+    /*for debugging purposes only*/
     std::ostringstream oss;
     boost::property_tree::write_json(oss, pt);
     std::cout << oss.str();
+#endif
 
-    lpf = -1;
     booking.load_data(pt);
-
     try
     {
         boost::asio::io_context io_context(threads);
@@ -277,6 +297,6 @@ int main(int argc, char* argv[])
         std::cerr << "Exception: " << e.what() << "\n";
     }
 
-    return -1;
+    return 0;
 }
 

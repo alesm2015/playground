@@ -30,12 +30,39 @@
             "miDebuggerPath": "/usr/bin/gdb"
         },
         {
+            "name": "valgrind: play",
+            "type": "cppdbg",
+            "request": "launch",
+            "program": "valgrind", 
+            "args": [
+                "--leak-check=full",
+                "--track-origins=yes",
+                "--tool=memcheck",
+                "--vgdb=yes",
+                "--vgdb-error=0",
+                "--error-limit=no",
+                "${workspaceFolder}/build/playd/playd"
+            ],
+            "stopAtEntry": false,
+            "cwd": "${workspaceFolder}",
+            "environment": [],
+            "externalConsole": true,
+            "MIMode": "gdb",       // Optional: if you want to use gdb to attach.
+            "setupCommands": [
+                {
+                    "description": "Enable pretty-printing for gdb",
+                    "text": "-enable-pretty-printing",
+                    "ignoreFailures": true
+                }
+            ]
+        },
+        {
             "name": "test",
             "cwd": "${workspaceFolder}",
             "type": "cppdbg",
             "request": "launch",
             "program": "${workspaceFolder}/build/test/test_suite", // Binary to exec
-            "args": [], // Arguments passed
+            "args": ["--log_level=all"], // Arguments passed
             "stopAtEntry": false,
             "environment": [
                 {

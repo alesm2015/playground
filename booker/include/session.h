@@ -6,6 +6,7 @@
 #include <vector>
 #include <mutex>
 #include <string>
+#include <functional>
 
 #include <boost/asio.hpp>
 #include <boost/asio/ip/tcp.hpp>
@@ -15,6 +16,12 @@
 
 #include "booking.h"
 #include "customcli.h"
+
+
+/*predefined class*/
+class CSession;
+
+using on_close_cb = std::function<void(std::shared_ptr<class CSession>)>; /*!< callback definition */
 
 
 /*! \brief Session class.
@@ -67,6 +74,10 @@ public:
 
     /// @brief Close TCP connection
     void on_close(void);
+
+    /// @brief Set up on close callback function, to inform server class
+    /// @param on_close_cb [in] callback function
+    void set_on_close_cb(on_close_cb on_close_cb) {m_on_close_cb = on_close_cb;};
 
 public:
     /// @brief Telent protocol callback function
@@ -181,8 +192,10 @@ private:
     void book_status_cb (std::ostream& out, const std::string& arg, size_t movie_pos, size_t theatre_pos);
 
 private:
+    bool m_b_exit_done; /*!< variable set, if session was properly unregistered */
     bool m_b_exit_ready; /*!< variable to exit the session, when all messages are send*/
-    telnet_t *m_p_telnet; /*!< telnet control structur e*/
+    telnet_t *m_p_telnet; /*!< telnet control structure*/
+    on_close_cb m_on_close_cb; /*!< on close callback to inform server class, that we died*/
 
     /*cli*/
     cli::CmdHandler m_colorCmd;

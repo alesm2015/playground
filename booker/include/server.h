@@ -1,7 +1,9 @@
 #pragma once
 
 #include <set>
+#include <map>
 #include <vector>
+#include <mutex>
 
 #include <boost/asio.hpp>
 #include <boost/asio/awaitable.hpp>
@@ -27,6 +29,7 @@ private:
         boost::asio::ip::tcp::acceptor acceptor_; /*!< TCP listenning acceptor ctx */
         //std::set<std::shared_ptr<CSession>> m_sessions_set;
     };
+
 
 public:
     /// @brief Standard constructr
@@ -63,6 +66,13 @@ public:
         return add_listener(io_context, endpoint);
     }
 
+    /// @brief Close all listening ports
+    void close_listening_ports (void);
+
+    /// @brief Close all active sessions
+    /// @return Negative on error, positive on success
+    int32_t close_all_sessions(void);
+
 private:
     /// @brief Add new TCP listening port
     /// @param io_context [in] Refrence to asio contex
@@ -75,9 +85,21 @@ private:
     /// @return Coorutine return, so that the code can continue
     boost::asio::awaitable<void> listener(std::shared_ptr<listener_ctx> ctx_ptr);
 
+    /// @brief callback function called when session has been terminated
+    /// @param session_ptr [in] session
+    void on_session_close_cb(std::shared_ptr<class CSession> session_ptr);
+
 private:
     CBooking &m_booking; /*!< Refrence to booking class */
     std::vector<std::shared_ptr<listener_ctx>> m_listener_ctx_vector; /*!< vector of all listening ports */
+
+    std::mutex m_mutex;
+    size_t m_current_connections;
+    on_close_cb m_on_close_cb;
+    std::map<std::shared_ptr<CSession>, std::shared_ptr<listener_ctx>> m_active_sessions; /*!< Active sessions map */
+
+private:
+    static constexpr size_t m_max_active_connections = 20;
 };
 
 

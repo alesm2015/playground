@@ -17,7 +17,8 @@ add_library(standalone_asio_test INTERFACE)
 
 add_executable(
     test_suite
-    booking.cpp
+    booking_test.cpp
+    parser_test.cpp
 )
 
 target_include_directories(test_suite PUBLIC
