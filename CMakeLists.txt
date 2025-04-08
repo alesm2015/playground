@@ -18,5 +18,8 @@ add_subdirectory(booker)
 # Build the application
 add_subdirectory(playd)
 
+# Run unit tests
+enable_testing()
+add_subdirectory(test)
 
 
