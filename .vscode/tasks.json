@@ -34,7 +34,7 @@
             }
         },
         {
-            "label": "make clean",
+            "label": "clean",
             "type": "shell",
             "command": "rm -rf ${workspaceFolder}/build",
             "problemMatcher": [

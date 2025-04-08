@@ -1,4 +1,4 @@
-#define BOOST_TEST_MODULE booking
+#define BOOST_TEST_MODULE tests
 #include <boost/test/unit_test.hpp>
 
 #include "booking.h"
