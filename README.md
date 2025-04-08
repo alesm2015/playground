@@ -15,10 +15,7 @@ sudo dnf install cppcheck-htmlreport
 
 
 -----------------------------------------------------------------
-#!/bin/bash
 
-cppcheck --project=./build-debug-local/compile_commands.json -f --config-exclude=./build-debug-local -DPROTOBUF_VERSION=3019001 --report-progress --verbose --enable=warning --enable=style --enable=performance --enable=portability --inconclusive --force --addon=threadsafety.py --addon=findcasts.py --addon=misc.py --inline-suppr --check-level=exhaustive --xml 2> report.xml
-cppcheck-htmlreport --file=report.xml --report-dir=build_report --source-dir=.
 
 
 #goto exec directory
