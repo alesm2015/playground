@@ -6,14 +6,14 @@ if(POLICY CMP0167)
 endif()
 
 # Files need to be compiled
-list (APPEND main_SOURCES
+list (APPEND booker_SOURCES
       server.cpp
       session.cpp
       booking.cpp
       parser.cpp
     )
 
-project(main LANGUAGES C CXX)
+project(booker LANGUAGES C CXX)
 #External librarires
 set(Boost_USE_STATIC_LIBS OFF) 
 set(Boost_USE_MULTITHREADED ON)  
@@ -54,25 +54,31 @@ set(CMAKE_COLOR_DIAGNOSTICS ON)
 set(CMAKE_BUILD_TYPE        Debug)
 set(CMAKE_CXX_STANDARD_REQUIRED True)
 
-add_library(${PROJECT_NAME} STATIC ${main_SOURCES})
+add_library(${PROJECT_NAME} STATIC ${booker_SOURCES})
 target_compile_features(${PROJECT_NAME} PUBLIC cxx_std_20)
 target_compile_options(${PROJECT_NAME} PRIVATE -Wall -Wextra -Wpedantic)
 
 target_include_directories(${PROJECT_NAME} PUBLIC
+    include
+    ${PROJECT_SOURCE_DIR}/include
+    ${CMAKE_SOURCE_DIR}/include
+    ${CMAKE_SOURCE_DIR}
     "${PROJECT_BINARY_DIR}"
     "${PROJECT_SOURCE_DIR}"
     ${CMAKE_CURRENT_BINARY_DIR}
     ${Boost_INCLUDE_DIRS}
-    ${CMAKE_SOURCE_DIR}
     ${libtelnet_SOURCE_DIR}
 )
 
 target_link_libraries(${PROJECT_NAME}
     PUBLIC
-    ${Boost_LIBRARIES}
-    cli::cli
-    libtelnet
+      ${Boost_LIBRARIES}
+      cli::cli
+      libtelnet
 )
 
-
+set(${PROJECT_NAME}_INCLUDE_DIRS 
+    ${Boost_LIBRARIES}
+    ${PROJECT_SOURCE_DIR}/include
+  CACHE INTERNAL "${PROJECT_NAME}: Include Directories" FORCE)
 

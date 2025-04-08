@@ -6,7 +6,7 @@
             "cwd": "${workspaceFolder}",
             "type": "cppdbg",
             "request": "launch",
-            "program": "${workspaceFolder}/build/play", // Binary to exec
+            "program": "${workspaceFolder}/build/playd/playd", // Binary to exec
             "args": [], // Arguments passed
             "stopAtEntry": false,
             "environment": [
