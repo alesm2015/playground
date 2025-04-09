@@ -1,5 +1,4 @@
 #!/bin/bash
 
 #echo $0
-#echo $1
 cppcheck --project=$1/compile_commands.json -f --report-progress --verbose --enable=warning --enable=style --enable=performance --enable=portability --inconclusive --force --addon=threadsafety.py --addon=findcasts.py --addon=misc.py --inline-suppr --check-level=exhaustive --xml 2> $1/report.xml

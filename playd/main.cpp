@@ -184,7 +184,7 @@ static void daemonize(uint32_t flags)
             exit(EXIT_FAILURE);          
     }
 
-    /* Open lock file, so we make sure, that signle instance is running only*/
+    /* Open lock file, so we make sure, that single instance is running only*/
     if ((pid_file_path.empty() == false)&&(!(flags & BD_NO_SINGLE_INSTANCE)))
     {     
         rc = snprintf((char *)&ch_tmp, sizeof(ch_tmp), "%s\\%s",\
@@ -222,6 +222,7 @@ static void daemonize(uint32_t flags)
 int main(int argc, char* argv[])
 {
     int threads;
+    bool bdaemonize;
     CBooking booking;
     CServer server(booking);
     boost::property_tree::ptree pt;
@@ -230,11 +231,15 @@ int main(int argc, char* argv[])
     (void)(argv);
 
     lpf = -1;
+    bdaemonize = false;
     app_name = "playd";
 
     std::cout << app_name << " version " << playd_VERSION_MAJOR << "." << playd_VERSION_MINOR << "." << playd_VERSION_PATCH << "\n";
 
-    if (0)
+    #ifdef CONFIG_BUILD_DAEMON
+        bdaemonize = true;
+    #endif
+    if (bdaemonize)
         daemonize(0x00);
 
     threads = 2;

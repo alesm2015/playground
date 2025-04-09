@@ -1,18 +1,15 @@
-#Simple project playground
-
-sudo dnf install boost-devel
-sudo dnf install telnet
-
-#Doxygen specific
-sudo dnf install doxygen
-sudo dnf install graphviz
-
-#Advanced code verification
-sudo dnf install valgrind 
-sudo dnf install cppcheck
-sudo dnf install cppcheck-htmlreport
+Please refer to the following file root_dir/doc/README.md for more information.
 
 
+
+
+
+Cppcheck
+Clang-Tidy
+
+*Conan* and *Vcpkg*,
+
+clang-format
 
 -----------------------------------------------------------------
 

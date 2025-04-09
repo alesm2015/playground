@@ -33,21 +33,15 @@
             "name": "valgrind: play",
             "type": "cppdbg",
             "request": "launch",
-            "program": "valgrind", 
+            "program": "${workspaceFolder}/vg", 
             "args": [
-                "--leak-check=full",
-                "--track-origins=yes",
-                "--tool=memcheck",
-                "--vgdb=yes",
-                "--vgdb-error=0",
-                "--error-limit=no",
-                "${workspaceFolder}/build/playd/playd"
+                "${workspaceFolder}/build"
             ],
             "stopAtEntry": false,
             "cwd": "${workspaceFolder}",
             "environment": [],
             "externalConsole": true,
-            "MIMode": "gdb",       // Optional: if you want to use gdb to attach.
+            "MIMode": "gdb",
             "setupCommands": [
                 {
                     "description": "Enable pretty-printing for gdb",
