@@ -1,4 +1,0 @@
-#!/bin/bash
-
-valgrind --tool=memcheck --leak-check=full --error-limit=no --track-origins=yes --vgdb=yes --read-inline-info=yes --read-var-info=yes --track-origins=yes --vgdb-error=0 --log-file=$0/"valgrind.log" $0/playd/playd
-

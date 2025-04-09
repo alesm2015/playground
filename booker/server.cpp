@@ -123,9 +123,6 @@ void CServer::close_listening_ports (void)
 /// @return Negative on error, positive on success
 int32_t CServer::close_all_sessions(void)
 {
-    if (m_listener_ctx_vector.size())
-        return -EFAULT;
-
     do {
         auto it = m_active_sessions.begin();
         if (it == m_active_sessions.end())

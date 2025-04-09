@@ -45,52 +45,6 @@ static uint32_t get_pid(void)
 }
 
 #ifndef _WIN32
-/// @brief Signal callback handler
-/// @param [in] sig signal UID
-static void signal_handler(int sig)
-{
-    switch (sig)
-    {
-    case SIGHUP:
-        /*reload the configuration files, if this applies*/
-        break;
-    case SIGTERM:
-        /*shut down the daemon and exit cleanly*/
-        break;   
-    case SIGCHLD:
-        /*Child process terminated, stopped, or continued*/
-        break;
-    default:
-        break;
-    } 
-}
-
-/// @brief Register signals
-static void register_signals(void)
-{
-    struct sigaction new_action, old_action;
-    
-    /* Catch, ignore and handle signals */
-    new_action.sa_handler = signal_handler;
-    sigemptyset(&new_action.sa_mask);
-    new_action.sa_flags = 0;
-
-    if (sigaction(SIGHUP, &new_action, &old_action) < 0)
-    { /*signal hang up*/
-        exit(EXIT_FAILURE);  
-    } 
-#if 0  
-    if (sigaction(SIGTERM, &new_action, &old_action) < 0)
-    { /*Termination signal*/
-        exit(EXIT_FAILURE);  
-    }
-#endif      
-    if (sigaction(SIGCHLD, &new_action, &old_action) < 0)
-    { /*Child process terminated, stopped, or continued*/
-        exit(EXIT_FAILURE);
-    }  
-}    
-
 /// @brief Start us as daemon
 /// @param flags [in] Configuration
 static void daemonize(uint32_t flags)
@@ -124,9 +78,6 @@ static void daemonize(uint32_t flags)
     if (setsid() < 0) // become leader of new session
         exit(EXIT_FAILURE);               
 
-    /*register to signals*/
-    register_signals();
-
     /*
     * We will fork again, also known as a
     * double fork. This second fork will orphan
@@ -147,7 +98,7 @@ static void daemonize(uint32_t flags)
     /* An error occurred */
     if (pid < 0)
         exit(EXIT_FAILURE);
-    
+
     /* Success: Let the parent terminate */
     if (pid > 0)
         exit(EXIT_SUCCESS);            
@@ -155,11 +106,11 @@ static void daemonize(uint32_t flags)
     /* Set new file permissions */
     if(!(flags & BD_NO_UMASK0))
         umask(0);
-    
+        
     /* Change the working directory to the root directory */
     /* or another appropriated directory */
     if(!(flags & BD_NO_CHDIR))
-        chdir("/");    
+        chdir("/");
 
     if(!(flags & BD_NO_CLOSE_FILES))  // close all open files
     {
@@ -187,9 +138,9 @@ static void daemonize(uint32_t flags)
     /* Open lock file, so we make sure, that single instance is running only*/
     if ((pid_file_path.empty() == false)&&(!(flags & BD_NO_SINGLE_INSTANCE)))
     {     
-        rc = snprintf((char *)&ch_tmp, sizeof(ch_tmp), "%s\\%s",\
+        rc = snprintf((char *)&ch_tmp, sizeof(ch_tmp), "%s/%s",\
         pid_file_path.c_str(), app_name.c_str());
-
+        std::cout << ch_tmp << "\r\n";
         if ((rc < 0)||((size_t)rc > sizeof(ch_tmp)))
             exit(EXIT_FAILURE);
 
@@ -215,12 +166,73 @@ static void daemonize(uint32_t flags)
 #endif /*_WIN32*/
 
 
+
+/// @brief signal event handler callback
+/// @param timer [io] refrence to timer
+/// @param error [in] Result of operation.
+/// @param signal_number [in] Indicates which signal occurred.
+static void signal_handler_cb
+(
+    boost::asio::steady_timer &timer,
+    const boost::system::error_code& error,
+    int signal_number
+) 
+{
+    (void)(signal_number);
+
+    if (!error) {
+        timer.cancel_one();
+    }
+    else {
+        //error, just crash the program
+        exit(-1);
+    }
+}
+
+
+
+
+/// @brief Shut down coroutine
+/// @param server [io] server reference
+/// @param io_context [io] boost io context
+/// @param timer [io] timer reference
+/// @return none
+static boost::asio::awaitable<void> on_shut_down
+(
+    CServer& server,
+    boost::asio::io_context& io_context,
+    boost::asio::steady_timer &timer
+)
+{
+    boost::system::error_code ec;
+
+    /*wait for timer event*/
+    co_await timer.async_wait(redirect_error(boost::asio::use_awaitable, ec));
+
+    //start with shut down process
+    server.close_listening_ports(); //close all listening ports
+    timer.expires_after(std::chrono::milliseconds(100));
+    co_await timer.async_wait(redirect_error(boost::asio::use_awaitable, ec));
+
+    server.close_all_sessions(); //close all sessions
+    timer.expires_after(std::chrono::milliseconds(100));
+    co_await timer.async_wait(redirect_error(boost::asio::use_awaitable, ec));
+
+    io_context.stop(); //stop io_context
+    co_return;
+}
+
+
+
+
+
 /// @brief Main entry
 /// @param argc [in] number of parameters
 /// @param argv [in] parameter value
 /// @return Program compltition
 int main(int argc, char* argv[])
 {
+    int rc;
     int threads;
     bool bdaemonize;
     CBooking booking;
@@ -231,18 +243,21 @@ int main(int argc, char* argv[])
     (void)(argv);
 
     lpf = -1;
-    bdaemonize = false;
-    app_name = "playd";
+    app_name = "playd"; /*!< App name */
+    pid_file_path = "/tmp"; /*!< Location of lock file */
 
-    std::cout << app_name << " version " << playd_VERSION_MAJOR << "." << playd_VERSION_MINOR << "." << playd_VERSION_PATCH << "\n";
+    std::cout << app_name << " version " << playd_VERSION_MAJOR << "." << playd_VERSION_MINOR << "." << playd_VERSION_PATCH << " started\n";
 
     #ifdef CONFIG_BUILD_DAEMON
         bdaemonize = true;
+    #else
+        bdaemonize = false;
     #endif
     if (bdaemonize)
         daemonize(0x00);
 
-    threads = 2;
+    /*default configuration*/
+    threads = 2; /*!< number of threads */
     std::string data =\
         "{"\
         "\"movies\": ["\
@@ -285,16 +300,32 @@ int main(int argc, char* argv[])
     std::cout << oss.str();
 #endif
 
-    booking.load_data(pt);
+    rc = booking.load_data(pt);
+    if (rc < EXIT_SUCCESS) {
+        return rc;
+    }
+
     try
     {
         boost::asio::io_context io_context(threads);
+        boost::asio::steady_timer timer(io_context, std::chrono::steady_clock::time_point::max());
+        
+        /*spawn new coroutine*/
+        boost::asio::co_spawn(io_context,
+            [&server, &io_context, &timer]() mutable -> boost::asio::awaitable<void> {
+                co_await on_shut_down(server, io_context, timer);
+            }, boost::asio::detached);
 
+        /*add listenning ports*/
         server.add_listener(io_context, boost::asio::ip::tcp::v4(), 50000);
 
-        boost::asio::signal_set signals(io_context, SIGINT, SIGTERM);
-        signals.async_wait([&](auto, auto){ io_context.stop(); });
+        /*signal control*/
+        boost::asio::signal_set signals(io_context, SIGINT, SIGTERM, SIGQUIT);
+        signals.async_wait([&timer](const boost::system::error_code& error, int signal_number) {
+            signal_handler_cb(timer, error, signal_number);
+        });
 
+        /*run io contex*/
         io_context.run();
     }
     catch (std::exception& e)
@@ -302,6 +333,6 @@ int main(int argc, char* argv[])
         std::cerr << "Exception: " << e.what() << "\n";
     }
 
-    return 0;
+    return EXIT_SUCCESS;
 }
 

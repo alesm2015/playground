@@ -103,7 +103,7 @@ The project can be built using the following commands:
 
 ```shell
 cd /path/to/this/project
-mkdir -p build # md build (on Windows)
+mkdir -p build 
 cd build
 cmake -BUILD_UNIT_TESTS=TRUE -BUILD_STATIC_ANALYSIS=TRUE -DCMAKE_BUILD_TYPE=Debug ..
 cmake --build .
@@ -126,7 +126,27 @@ Static analysis report is located in the folder path/to/this/project/build/cppch
 
 ## Runtime analysis
 Runtime analysis requires application to run. Further more application needs to be shut down properly (not terminated) in order for sucessfull report generation.
-Runtime analysis can be executed via bash script on root folder as: ./vg ./build
+Best way to run runtime analysis is via VS Code. Make sure, that you select 'valgrind: play' in run mode. You will need to resume the program a couple of times, during the operation because it is stoped by the gdb.
+Runtime results are in path/to/this/project/build/valgrind.log
+
+Example of report looks something as below:
+```shell
+==1264646== Memcheck, a memory error detector
+==1264646== Copyright (C) 2002-2024, and GNU GPL'd, by Julian Seward et al.
+==1264646== Using Valgrind-3.24.0 and LibVEX; rerun with -h for copyright info
+==1264646== Command: /home/alesm/Projects/playgrounds/playground/build/playd/playd
+==1264646== Parent PID: 1264630
+==1264646== 
+==1264646== 
+==1264646== HEAP SUMMARY:
+==1264646==     in use at exit: 0 bytes in 0 blocks
+==1264646==   total heap usage: 1,296 allocs, 1,296 frees, 162,264 bytes allocated
+==1264646== 
+==1264646== All heap blocks were freed -- no leaks are possible
+==1264646== 
+==1264646== For lists of detected and suppressed errors, rerun with: -s
+==1264646== ERROR SUMMARY: 0 errors from 0 contexts (suppressed: 0 from 0)
+```
 
 ## Installing
 Instalation is currently not supported.
@@ -134,6 +154,7 @@ Instalation is currently not supported.
 # Usage
 As already described, the interface is allowed only trough telnet connection. Standard connection port is 50000, unless is configured 
 differently. Listening port is configured in the main.cpp function.
+Gracefully shut down is allowable only trough kill comand as: kill -n 3 <playd pid>
 
 Example connecting to the application:
 ```shell
@@ -244,7 +265,7 @@ Release already selected seat. If input parameter is wong, function will fail.
 
 ```shell
 Currently reserved seats: 1, 2, 3, 8, 9, 10
-Invalid seats: 1, 2, 3, 8, 9, 105
+Invalid seats: 1, 2, 3, 8, 9, 5
 ```
 
 ## status
@@ -257,5 +278,5 @@ Currently reserved seats: 1, 2, 3, 8, 9, 10
 ```
 
 ## <movie> 
-This command return CLI back ok the parent directory
+This command return CLI back to the parent directory
 

@@ -33,9 +33,16 @@
             "name": "valgrind: play",
             "type": "cppdbg",
             "request": "launch",
-            "program": "${workspaceFolder}/vg", 
+            "program": "/usr/bin/valgrind", 
             "args": [
-                "${workspaceFolder}/build"
+                "--leak-check=full",
+                "--track-origins=yes",
+                "--tool=memcheck",
+                "--error-limit=no",
+                "--track-origins=yes",
+                "--vgdb=yes",
+                "--log-file=${workspaceFolder}/build/valgrind.log",
+                "${workspaceFolder}/build/playd/playd"
             ],
             "stopAtEntry": false,
             "cwd": "${workspaceFolder}",

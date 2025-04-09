@@ -673,6 +673,7 @@ void CSession::trybook_seats_cb (std::ostream& out, const std::string& arg, size
     out << "\n";
     
     if (unavalable_seats.empty() != true) {
+        tmp.clear();
         /*list of seats, which were not able to get taken*/
         out << cli::beforeWarn;
         out << "Unavailble seats: ";
@@ -733,6 +734,7 @@ void CSession::unbook_seats_cb (std::ostream& out, const std::string& arg, size_
     out << "\n";
 
     if (invalid_seats.empty() != true) {
+        tmp.clear();
         /*list of the seats, which were not booked by us, or are free*/
         out << cli::beforeWarn;
         out << "Invalid seats: ";

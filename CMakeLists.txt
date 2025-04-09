@@ -11,8 +11,8 @@ endif()
 
 # Cmake configuration
 option(BUILD_UNIT_TESTS "Build unit tests" ON)
-option(BUILD_DOCUMENTATION "Create and install the HTML based API documentation (requires Doxygen)" ${DOXYGEN_FOUND})
-#option(BUILD_DOCUMENTATION "Create and install the HTML based API documentation (requires Doxygen)" OFF)
+#option(BUILD_DOCUMENTATION "Create and install the HTML based API documentation (requires Doxygen)" ${DOXYGEN_FOUND})
+option(BUILD_DOCUMENTATION "Create and install the HTML based API documentation (requires Doxygen)" ON)
 option(BUILD_STATIC_ANALYSIS "Build static analasysis" ON)
 option(BUILD_DAEMON "build application as daemon" OFF)
 
