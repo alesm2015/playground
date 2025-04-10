@@ -248,7 +248,7 @@ int main(int argc, char* argv[])
 
     std::cout << app_name << " version " << playd_VERSION_MAJOR << "." << playd_VERSION_MINOR << "." << playd_VERSION_PATCH << " started\n";
 
-    #ifdef CONFIG_BUILD_DAEMON
+    #ifdef BUILD_DAEMON
         bdaemonize = true;
     #else
         bdaemonize = false;

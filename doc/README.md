@@ -94,7 +94,7 @@ The repository layout is pretty straightforward, including the CMake files to bu
 
 ### Available CMake Options
 * BUILD_UNIT_TESTS      - Build unit test application
-* BUILD_DOCUMENTATION   - Automatically set if doxygen application is installed on the system
+* BUILD_DOCUMENTATION   - Build project documentation
 * BUILD_STATIC_ANALYSIS - Perform static analysis after sucessfully completed compalation
 * BUILD_DAEMON          - Build application as a Linux daemon
 
@@ -105,8 +105,8 @@ The project can be built using the following commands:
 cd /path/to/this/project
 mkdir -p build 
 cd build
-cmake -BUILD_UNIT_TESTS=TRUE -BUILD_STATIC_ANALYSIS=TRUE -DCMAKE_BUILD_TYPE=Debug ..
-cmake --build .
+cmake -DBUILD_UNIT_TESTS=TRUE -DBUILD_STATIC_ANALYSIS=TRUE -DBUILD_DOCUMENTATION=TRUE -DCMAKE_BUILD_TYPE=Debug ..
+make
 ```
 These commands will build the entire code and generate all supporting files, like documentation, etc.
 
