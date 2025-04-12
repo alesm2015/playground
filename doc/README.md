@@ -118,6 +118,21 @@ Optionally is possible to run application via GDB to run and debug it.
 By default, the template uses Boost unit test framework. To run the tests, simply use path/to/this/project/build/test/unit_test --log_level=all.
 Optionally is possible to run application via GDB to debug unit tests.
 
+## Building via docker
+Make sure that docker has been properly installed into the system. Please follow to the link [Install Docker Engine](https://docs.docker.com/engine/install/) how to properly install docker on the appropiate system.
+Once docker engine is installed, it is required to build a docker build system first. Following command in the root directory shall be typed:
+```shell
+docker build -t play-cpp-dev .
+```
+
+Entire image can be build with following line using volume mount of the entire repositry root.
+```shell
+docker run -it -v "$(pwd)":/workspace:Z play-cpp-dev /bin/bash
+```
+
+':Z' command can be ommited if docker perrmision on the host machine are properly set.
+Build configuration, can be easily changed if Docker file is properly modified. Please check build options above. 
+
 ## Generating documentation
 Documentation is autmatically generated and is located in the folder: path/to/this/project/build/doc/html/index.html
 
