@@ -32,6 +32,15 @@ set(CMAKE_CXX_STANDARD_REQUIRED True)
 add_executable(${PROJECT_NAME} ${playd_SOURCES})
 target_compile_features(${PROJECT_NAME} PUBLIC cxx_std_20)
 
+if (BUILD_DAEMON)
+  target_compile_definitions(${PROJECT_NAME} PRIVATE BUILD_AS_DAEMON)
+endif()
+
+if (BUILD_WITH_PROFILER)
+  target_compile_definitions(${PROJECT_NAME} PRIVATE BUILD_WITH_PROFILER)
+endif()
+
+
 # Compiler & Linker flags
 if (MSVC)
 	# Compiling with Microsoft Visual Studio
@@ -39,6 +48,11 @@ if (MSVC)
 else()
 	# Compiling with GCC
 	target_compile_options(${PROJECT_NAME} PRIVATE -Wall -Wextra -Wpedantic)
+  if (BUILD_WITH_PROFILER)
+    target_compile_definitions(${PROJECT_NAME} PRIVATE CMAKE_CXX_FLAGS=-pg)
+    target_compile_definitions(${PROJECT_NAME} PRIVATE CMAKE_EXE_LINKER_FLAGS=-pg)
+    target_compile_definitions(${PROJECT_NAME} PRIVATE CMAKE_SHARED_LINKER_FLAGS=-pg)
+  endif()
 endif()
 
 # Predprocessor definitions

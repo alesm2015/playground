@@ -57,6 +57,7 @@ set(CMAKE_CXX_STANDARD_REQUIRED True)
 add_library(${PROJECT_NAME} STATIC ${booker_SOURCES})
 target_compile_features(${PROJECT_NAME} PUBLIC cxx_std_20)
 
+
 # Compiler & Linker flags
 if (MSVC)
 	# Compiling with Microsoft Visual Studio
@@ -64,6 +65,15 @@ if (MSVC)
 else()
 	# Compiling with GCC
 	target_compile_options(${PROJECT_NAME} PRIVATE -Wall -Wextra -Wpedantic)
+  if (BUILD_WITH_PROFILER)
+    target_compile_definitions(${PROJECT_NAME} PRIVATE CMAKE_CXX_FLAGS="-g -pg")
+    target_compile_definitions(${PROJECT_NAME} PRIVATE CMAKE_EXE_LINKER_FLAGS="-g -pg")
+    target_compile_definitions(${PROJECT_NAME} PRIVATE CMAKE_SHARED_LINKER_FLAGS="-g -pg")
+
+    target_compile_definitions(libtelnet PRIVATE CMAKE_CXX_FLAGS="-g -pg")
+    target_compile_definitions(libtelnet PRIVATE CMAKE_EXE_LINKER_FLAGS="-g -pg")
+    target_compile_definitions(libtelnet PRIVATE CMAKE_SHARED_LINKER_FLAGS="-g -pg")
+  endif()
 endif()
 
 # Predprocessor definitions

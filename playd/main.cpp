@@ -208,6 +208,7 @@ static boost::asio::awaitable<void> on_shut_down
 
     /*wait for timer event*/
     co_await timer.async_wait(redirect_error(boost::asio::use_awaitable, ec));
+    std::cout << "Shutting down\n";
 
     //start with shut down process
     server.close_listening_ports(); //close all listening ports
@@ -248,13 +249,15 @@ int main(int argc, char* argv[])
 
     std::cout << app_name << " version " << playd_VERSION_MAJOR << "." << playd_VERSION_MINOR << "." << playd_VERSION_PATCH << " started\n";
 
-    #ifdef BUILD_DAEMON
+#ifdef BUILD_AS_DAEMON
         bdaemonize = true;
-    #else
+#else
         bdaemonize = false;
-    #endif
-    if (bdaemonize)
+#endif
+    if (bdaemonize) {
+        std::cout << "Daemonizing\n";
         daemonize(0x00);
+    }
 
     /*default configuration*/
     threads = 2; /*!< number of threads */
@@ -308,7 +311,11 @@ int main(int argc, char* argv[])
     try
     {
         boost::asio::io_context io_context(threads);
+#ifndef BUILD_WITH_PROFILER
         boost::asio::steady_timer timer(io_context, std::chrono::steady_clock::time_point::max());
+#else
+        boost::asio::steady_timer timer(io_context, std::chrono::seconds(10));
+#endif
         
         /*spawn new coroutine*/
         boost::asio::co_spawn(io_context,
