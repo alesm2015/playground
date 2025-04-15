@@ -31,7 +31,23 @@ set(CMAKE_CXX_STANDARD_REQUIRED True)
 
 add_executable(${PROJECT_NAME} ${playd_SOURCES})
 target_compile_features(${PROJECT_NAME} PUBLIC cxx_std_20)
-target_compile_options(${PROJECT_NAME} PRIVATE -Wall -Wextra -Wpedantic)
+
+# Compiler & Linker flags
+if (MSVC)
+	# Compiling with Microsoft Visual Studio
+	target_compile_options(${PROJECT_NAME} PRIVATE /W4 /permissive-)
+else()
+	# Compiling with GCC
+	target_compile_options(${PROJECT_NAME} PRIVATE -Wall -Wextra -Wpedantic)
+endif()
+
+# Predprocessor definitions
+if (MSVC)
+	target_compile_definitions(${PROJECT_NAME} PRIVATE PLATFORM_WINDOWS)
+else()
+	target_compile_definitions(${PROJECT_NAME} PRIVATE PLATFORM_UNIX)
+endif()
+
 
 target_include_directories(${PROJECT_NAME} PUBLIC
     include
